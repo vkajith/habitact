@@ -135,7 +135,7 @@ const SyncModal: React.FC<SyncModalProps> = ({
             marginRight: 'auto'
           }}>
             <QRCodeSVG 
-              value={`${window.location.origin}?sync=${syncCode}`} 
+              value={`${window.location.origin}?code=${syncCode}`} 
               size={200} 
             />
           </div>

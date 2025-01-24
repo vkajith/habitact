@@ -5,9 +5,15 @@ import AcUnitIcon from '@mui/icons-material/AcUnit';
 import SyncModal from '../components/SyncModal';
 import { useHabits } from '../hooks/useHabits';
 
-export default function Home() {
+export default function Home({ user }: { user?: { user_id: string } }) {
   const { habits, addHabit, updateHabit, loading, userId, setUserId, deleteHabit } = useHabits();
   const [showSyncModal, setShowSyncModal] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      setUserId(user.user_id);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (showSyncModal) {
@@ -69,4 +75,14 @@ export default function Home() {
       )}
     </div>
   );
-} 
+}
+
+Home.getInitialProps = async ({ query }: { query: { code: string } }) => {
+  const { code } = query;
+  let user = undefined;
+  if (code) {
+    user = JSON.parse(atob(code));
+  }
+  return { user };
+}; 
+
