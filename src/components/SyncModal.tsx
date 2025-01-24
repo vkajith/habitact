@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface SyncModalProps {
-  syncCode: string;
-  inputSyncCode: string;
-  syncError?: string;
+  userId?: string;
   onClose: () => void;
-  onSyncCodeSubmit: () => void;
-  onInputChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSyncCodeSubmit: (userId: string) => void;
+}
+
+interface SyncData {
+    user_id: string;
 }
 
 // Style constants for maintainability
@@ -37,17 +38,60 @@ const MODAL_STYLES = {
 };
 
 const SyncModal: React.FC<SyncModalProps> = ({ 
-  syncCode,
-  inputSyncCode,
+  userId,
   onClose,
   onSyncCodeSubmit,
-  onInputChange 
-}) => (
-  <div className="sync-modal" onClick={onClose} style={MODAL_STYLES.overlay}>
+}) => {
+
+  const [syncCode, setSyncCode] = useState<string>('');
+  const [inputSyncCode, setInputSyncCode] = useState<string>('');
+  const [syncError, setSyncError] = useState<string>('');
+  const getSyncCode = (userId: string) => {
+    const syncData: SyncData = {
+      user_id: userId,
+    };
+    const code = btoa(JSON.stringify(syncData));
+    return code;
+  }
+
+  const handleSyncCodeSubmit = () => {
+    try {
+      const decodedData = JSON.parse(atob(inputSyncCode)) as SyncData;
+      if (!decodedData?.user_id) {
+        throw new Error('Invalid data format');
+      }
+      onSyncCodeSubmit(decodedData.user_id);
+      setInputSyncCode('');
+      onClose();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setSyncError(error.message);
+      } else {
+        setSyncError('Invalid sync code. Please try again.');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      const code = getSyncCode(userId);
+      setSyncCode(code);
+    }
+  }, [userId]);
+
+  return(
+    <div className="sync-modal" onClick={onClose} style={MODAL_STYLES.overlay}>
     <div onClick={(e) => e.stopPropagation()} style={MODAL_STYLES.content}>
       <h2 style={{ margin: 0, textAlign: 'center', fontSize: '1.5rem', fontWeight: '500' }}>
         Sync
       </h2>
+      {
+        syncError && (
+          <div style={{ color: 'red', textAlign: 'center', marginBottom: '1rem' }}>
+            {syncError}
+          </div>
+        )
+      }
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{
@@ -111,7 +155,7 @@ const SyncModal: React.FC<SyncModalProps> = ({
           <input
             type="text"
             value={inputSyncCode}
-            onChange={onInputChange}
+            onChange={(e) => setInputSyncCode(e.target.value)}
             placeholder="Enter a sync code"
             style={{
               width: '100%',
@@ -124,7 +168,9 @@ const SyncModal: React.FC<SyncModalProps> = ({
             }}
           />
           <button
-            onClick={onSyncCodeSubmit}
+            onClick={() => {
+                handleSyncCodeSubmit();
+            }}
             style={{
               width: '100%',
               padding: '0.75rem',
@@ -143,6 +189,9 @@ const SyncModal: React.FC<SyncModalProps> = ({
       </div>
     </div>
   </div>
-);
+  );
+
+
+};
 
 export default SyncModal;

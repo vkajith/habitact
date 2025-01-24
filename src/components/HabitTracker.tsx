@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
 interface Habit {
+  id: number;
+  user_id: string;
   name: string;
   data: boolean[];
 }
@@ -13,9 +15,11 @@ interface DateRange {
 
 interface HabitTrackerProps {
   habit: Habit;
+  onUpdate: (habit: Habit) => void;
+  onDelete: (habit: Habit) => void;
 }
 
-const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit }) => {
+const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit, onUpdate, onDelete }) => {
   const [habit, setHabit] = useState<Habit>(initialHabit);
   const [dateRange, setDateRange] = useState<DateRange>({ dates: [], months: [] });
   const [currentStreak, setCurrentStreak] = useState(0);
@@ -127,6 +131,11 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit }) => {
       data: newData
     });
 
+    onUpdate({
+      ...habit,
+      data: newData
+    });
+
     // Calculate new streak after updating the data
     setCurrentStreak(calculateStreak(dateRange.dates, newData));
 
@@ -188,7 +197,10 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit }) => {
   return (
     <div className="habit-tracker" style={{ fontFamily: "'Rubik', sans-serif" }}>
       <div className="habit-header">
-        <h2 style={{ fontFamily: "'Poppins', sans-serif" }}>{habit.name}</h2>
+        <div className="habit-subheader">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h2 style={{ fontFamily: "'Poppins', sans-serif", margin: 0 }}>{habit.name}</h2>
+        </div>
         <div 
           className="streak-badge"
           style={{ 
@@ -201,6 +213,46 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit }) => {
         >
           {currentStreak} DAY{currentStreak !== 1 ? 'S' : ''} STREAK
         </div>
+
+        </div>
+
+        <button
+            onClick={() => onDelete(habit)}
+            className="delete-button"
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '6px',
+              cursor: 'pointer',
+              color: '#ff4444',
+              borderRadius: '4px',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#ffeeee';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+            }}
+          >
+            <svg 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M3 6h18" />
+              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+            </svg>
+          </button>
       </div>
       <div className="calendar">
         <div className="months">

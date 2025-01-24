@@ -3,44 +3,11 @@ import HabitTracker from '../components/HabitTracker';
 import CreateHabitButton from '../components/CreateHabitButton';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
 import SyncModal from '../components/SyncModal';
-
-interface Habit {
-  id: number;
-  name: string;
-  data: boolean[];
-}
-
-interface SyncData {
-  habits: Habit[];
-  lastSync: string;
-}
+import { useHabits } from '../hooks/useHabits';
 
 export default function Home() {
-  const [habits, setHabits] = useState<Habit[]>([]);
+  const { habits, addHabit, updateHabit, loading, userId, setUserId, deleteHabit } = useHabits();
   const [showSyncModal, setShowSyncModal] = useState(false);
-  const [syncCode, setSyncCode] = useState('');
-  const [inputSyncCode, setInputSyncCode] = useState('');
-  const [syncError, setSyncError] = useState('');
-
-  useEffect(() => {
-    const savedHabits = localStorage.getItem('habits');
-    setHabits(savedHabits ? JSON.parse(savedHabits) : []);
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('habits', JSON.stringify(habits));
-  }, [habits]);
-
-  useEffect(() => {
-    if (showSyncModal) {
-      const syncData: SyncData = {
-        habits: habits,
-        lastSync: new Date().toISOString()
-      };
-      const code = btoa(JSON.stringify(syncData));
-      setSyncCode(code);
-    }
-  }, [showSyncModal, habits]);
 
   useEffect(() => {
     if (showSyncModal) {
@@ -49,43 +16,13 @@ export default function Home() {
       document.body.style.overflow = 'unset';
     }
 
-    // Cleanup function to restore scrolling when component unmounts
     return () => {
       document.body.style.overflow = 'unset';
     };
   }, [showSyncModal]);
 
-  const addHabit = (habitName: string) => {
-    setHabits([
-      ...habits,
-      {
-        id: Date.now(),
-        name: habitName,
-        data: []
-      }
-    ]);
-  };
 
-  const handleSyncCodeSubmit = () => {
-    try {
-      const decodedData = JSON.parse(atob(inputSyncCode)) as SyncData;
-      if (!decodedData?.habits || !Array.isArray(decodedData.habits)) {
-        throw new Error('Invalid data format');
-      }
-      setHabits(decodedData.habits);
-      setShowSyncModal(false);
-      setInputSyncCode('');
-      setSyncError('');
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setSyncError(error.message);
-      } else {
-        setSyncError('Invalid sync code. Please try again.');
-      }
-    }
-  };
 
-  // Extracted header component
   const AppHeader = () => (
     <header style={{ position: 'relative', zIndex: 1001 }}>
       <div className="app-header">
@@ -108,23 +45,26 @@ export default function Home() {
           Habits
         </h1>
         <p className="subtitle">Track your habits every day</p>
-        
-        <div className="habits-container">
-          {habits.map(habit => (
-            <HabitTracker key={habit.id} habit={habit} />
-          ))}
-          <CreateHabitButton onAdd={addHabit} />
-        </div>
+        {loading ? (
+          <div className="loader-container">
+            <div className="spinner"></div>
+            <p>Loading your habits...</p>
+          </div>
+        ) : (
+          <div className="habits-container">
+            {habits.map(habit => (
+              <HabitTracker key={habit.id} habit={habit} onUpdate={updateHabit} onDelete={deleteHabit}/>
+            ))}
+            <CreateHabitButton onAdd={addHabit} />
+          </div>
+        )}
       </main>
 
       {showSyncModal && (
         <SyncModal
-          syncCode={syncCode}
-          inputSyncCode={inputSyncCode}
-          syncError={syncError}
+          userId={userId}
           onClose={() => setShowSyncModal(false)}
-          onSyncCodeSubmit={handleSyncCodeSubmit}
-          onInputChange={(e) => setInputSyncCode(e.target.value)}
+          onSyncCodeSubmit={setUserId}
         />
       )}
     </div>

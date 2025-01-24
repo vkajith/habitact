@@ -13,11 +13,13 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.1",
     "@mui/material": "^6.4.1",
+    "@supabase/supabase-js": "^2.48.1",
     "canvas-confetti": "^1.9.3",
     "next": "15.1.6",
     "qrcode.react": "^4.2.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "uuid": "^11.0.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -25,6 +27,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "postcss": "^8",
