@@ -1,17 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 
-const HabitTracker = ({ habit: initialHabit }) => {
-  const [habit, setHabit] = useState(initialHabit);
-  const [dateRange, setDateRange] = useState({ dates: [], months: [] });
+interface Habit {
+  name: string;
+  data: boolean[];
+}
+
+interface DateRange {
+  dates: Date[];
+  months: string[];
+}
+
+interface HabitTrackerProps {
+  habit: Habit;
+}
+
+const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit }) => {
+  const [habit, setHabit] = useState<Habit>(initialHabit);
+  const [dateRange, setDateRange] = useState<DateRange>({ dates: [], months: [] });
   const [currentStreak, setCurrentStreak] = useState(0);
-  const scrollRef = useRef(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const ROWS_PER_COLUMN = 7;
   
   useEffect(() => {
     const generateDateRange = () => {
-      const dates = [];
-      const months = new Set();
+      const dates: Date[] = [];
+      const months = new Set<string>();
       
       // Get current date and set to end of day
       const endDate = new Date();
@@ -22,7 +36,7 @@ const HabitTracker = ({ habit: initialHabit }) => {
       startDate.setFullYear(endDate.getFullYear() - 1);
       
       // Generate all dates
-      let currentDate = new Date(startDate);
+      const currentDate = new Date(startDate);
       while (currentDate <= endDate) {
         dates.push(new Date(currentDate));
         
@@ -36,7 +50,7 @@ const HabitTracker = ({ habit: initialHabit }) => {
       }
 
       setDateRange({ 
-        dates: dates,
+        dates,
         months: Array.from(months)
       });
 
@@ -54,12 +68,15 @@ const HabitTracker = ({ habit: initialHabit }) => {
   useEffect(() => {
     if (scrollRef.current) {
       requestAnimationFrame(() => {
-        scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
+        const element = scrollRef.current;
+        if (element) {
+          element.scrollLeft = element.scrollWidth;
+        }
       });
     }
   }, [dateRange.dates]);
 
-  const formatDate = (date) => {
+  const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -77,7 +94,7 @@ const HabitTracker = ({ habit: initialHabit }) => {
     });
   };
 
-  const calculateStreak = (dates, data) => {
+  const calculateStreak = (dates: Date[], data: boolean[]): number => {
     let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -101,7 +118,7 @@ const HabitTracker = ({ habit: initialHabit }) => {
     return streak;
   };
 
-  const toggleDay = (index) => {
+  const toggleDay = (index: number): void => {
     const newData = [...habit.data];
     const newValue = !newData[index];
     newData[index] = newValue;
@@ -126,11 +143,11 @@ const HabitTracker = ({ habit: initialHabit }) => {
 
   // Organize dates into columns of 7 rows
   const createDateColumns = () => {
-    const columns = [];
+    const columns: Array<Array<{ date: Date; index: number }>> = [];
     const totalColumns = Math.ceil(dateRange.dates.length / ROWS_PER_COLUMN);
     
     for (let col = 0; col < totalColumns; col++) {
-      const column = [];
+      const column: Array<{ date: Date; index: number }> = [];
       for (let row = 0; row < ROWS_PER_COLUMN; row++) {
         const index = col * ROWS_PER_COLUMN + row;
         if (index < dateRange.dates.length) {
@@ -152,25 +169,18 @@ const HabitTracker = ({ habit: initialHabit }) => {
   const visibleMonths = dateRange.months.slice(-8);
 
   // Position tooltip based on column position
-  const getTooltipPosition = (columnIndex, totalColumns) => {
+  const getTooltipPosition = (columnIndex: number, totalColumns: number): string => {
     if (columnIndex < 2) return 'right';
     if (columnIndex > totalColumns - 3) return 'left';
     return 'center';
   };
 
-  const getStreakColor = () => {
-    // Max streak for full color saturation (adjust as needed)
+  const getStreakColor = (): string => {
     const maxStreak = 30;
-    // Calculate percentage (capped at 100%)
     const percentage = Math.min(currentStreak / maxStreak, 1);
-    
-    // HSL values for gradual transition
-    // Hue goes from 45 (golden yellow) to 120 (green)
     const hue = 45 + (percentage * 75);
-    // Saturation increases with streak
     const saturation = 70 + (percentage * 30);
-    // Lightness stays in a more visible range
-    const lightness = 50;  // Fixed lightness for better contrast
+    const lightness = 50;
     
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   };

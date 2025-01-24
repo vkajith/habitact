@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 
-const CreateHabitButton = ({ onAdd }) => {
+interface CreateHabitButtonProps {
+  onAdd: (habitName: string) => void;
+}
+
+const CreateHabitButton: React.FC<CreateHabitButtonProps> = ({ onAdd }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [habitName, setHabitName] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (habitName.trim()) {
       onAdd(habitName);
@@ -20,7 +24,7 @@ const CreateHabitButton = ({ onAdd }) => {
           <input
             type="text"
             value={habitName}
-            onChange={(e) => setHabitName(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setHabitName(e.target.value)}
             placeholder="Habit name"
             autoFocus
           />
