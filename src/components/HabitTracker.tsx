@@ -5,7 +5,7 @@ interface Habit {
   id: number;
   user_id: string;
   name: string;
-  data: boolean[];
+  completed_dates: string[];
 }
 
 interface DateRange {
@@ -57,13 +57,6 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit, onUpda
         dates,
         months: Array.from(months)
       });
-
-      if (!habit.data || habit.data.length !== dates.length) {
-        setHabit(prev => ({
-          ...prev,
-          data: new Array(dates.length).fill(false)
-        }));
-      }
     };
 
     generateDateRange();
@@ -98,57 +91,73 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit, onUpda
     });
   };
 
-  const calculateStreak = (dates: Date[], data: boolean[]): number => {
-    let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  // Helper function to format date to YYYY-MM-DD string
+  const formatDateToString = (date: Date): string => {
+    return date.toISOString().split('T')[0];
+  };
 
-    // Start from the most recent date
-    for (let i = dates.length - 1; i >= 0; i--) {
-      const currentDate = new Date(dates[i]);
-      currentDate.setHours(0, 0, 0, 0);
-
-      // Break if we find an unchecked day
-      if (!data[i]) break;
-      
-      // Only count streak if it's today or consecutive previous days
-      if (currentDate.getTime() === today.getTime() || 
-          currentDate.getTime() === today.getTime() - (streak * 24 * 60 * 60 * 1000)) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
+  // Check if a date is completed
+  const isDateCompleted = (date: Date): boolean => {
+    const dateStr = formatDateToString(date);
+    return habit.completed_dates?.includes(dateStr) || false;
   };
 
   const toggleDay = (index: number): void => {
-    const newData = [...habit.data];
-    const newValue = !newData[index];
-    newData[index] = newValue;
-    setHabit({
-      ...habit,
-      data: newData
-    });
+    const date = dateRange.dates[index];
+    const dateStr = formatDateToString(date);
+    
+    let newCompletedDates: string[];
+    if (isDateCompleted(date)) {
+      // Remove date if already completed
+      newCompletedDates = habit.completed_dates?.filter(d => d !== dateStr) || [];
+    } else {
+      // Add date if not completed
+      newCompletedDates = [...(habit.completed_dates || []), dateStr];
+    }
 
-    onUpdate({
+    const updatedHabit = {
       ...habit,
-      data: newData
-    });
+      completed_dates: newCompletedDates
+    };
+
+    setHabit(updatedHabit);
+    onUpdate(updatedHabit);
 
     // Calculate new streak after updating the data
-    setCurrentStreak(calculateStreak(dateRange.dates, newData));
+    setCurrentStreak(calculateStreak(dateRange.dates, updatedHabit.completed_dates));
 
-    if (newValue) {
+    if (!isDateCompleted(date)) {
       triggerConfetti();
     }
   };
 
-  useEffect(() => {
-    if (dateRange.dates.length > 0 && habit.data) {
-      setCurrentStreak(calculateStreak(dateRange.dates, habit.data));
+  const calculateStreak = (dates: Date[], completedDates: string[]): number => {
+    let streak = 0;
+    const today = new Date();
+
+    // eslint-disable-next-line prefer-const
+    let currentDate = new Date(today);
+
+    // Look back a maximum of 365 days to prevent infinite loops
+    for (let i = 0; i < 365; i++) {    
+      const dateStr = formatDateToString(currentDate);
+      
+      if (!completedDates.includes(dateStr)) {
+        break;
+      }
+      
+      streak++;
+      currentDate.setDate(currentDate.getDate() - 1);
     }
-  }, [dateRange.dates, habit.data]);
+    console.log(streak);
+    return streak;
+  };
+
+  useEffect(() => {
+    if (dateRange.dates.length > 0) {
+      setCurrentStreak(calculateStreak(dateRange.dates, habit.completed_dates));
+    }
+  }, [dateRange.dates, habit.completed_dates]);
 
   // Organize dates into columns of 7 rows
   const createDateColumns = () => {
@@ -267,7 +276,7 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit, onUpda
                 {column.map(({ date, index }) => (
                   <div
                     key={index}
-                    className={`day ${habit.data[index] ? 'checked' : ''} ${
+                    className={`day ${isDateCompleted(date) ? 'checked' : ''} ${
                       date.toDateString() === new Date().toDateString() ? 'today' : ''
                     } tooltip-${getTooltipPosition(columnIndex, dateColumns.length)}`}
                     onClick={() => toggleDay(index)}

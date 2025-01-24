@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface Habit {
   id: number;
   name: string;
-  data: boolean[];
+  completed_dates: string[];
   user_id: string; // Added for Supabase
   created_at?: string; // Added for Supabase
 }
@@ -79,7 +79,7 @@ export function useHabits() {
     try {
       const { error } = await supabase
         .from('habits')
-        .update({ name: habit.name, data: habit.data })
+        .update({ name: habit.name, completed_dates: habit.completed_dates })
         .eq('id', habit.id)
         .eq('user_id', userId);
 
@@ -106,7 +106,7 @@ export function useHabits() {
     const newHabit = {
       id: Date.now(),
       name: habitName,
-      data: [],
+      completed_dates: [],
       user_id: userId
     };
 
