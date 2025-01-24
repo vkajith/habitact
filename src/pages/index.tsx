@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import HabitTracker from '../components/HabitTracker';
 import CreateHabitButton from '../components/CreateHabitButton';
 import AcUnitIcon from '@mui/icons-material/AcUnit';
+import CloudSyncIcon from '@mui/icons-material/CloudSync';
 import SyncModal from '../components/SyncModal';
 import { useHabits } from '../hooks/useHabits';
 
@@ -36,8 +37,12 @@ export default function Home({ user }: { user?: { user_id: string } }) {
         <div className="app-title" style={{ fontSize: '1.5rem', fontWeight: '600' }}>
           HabitAct
         </div>
-        <button className="sync-button" onClick={() => setShowSyncModal(true)}>
-          Sync
+        <button 
+          className="sync-button tooltip" 
+          onClick={() => setShowSyncModal(true)}
+        >
+          <CloudSyncIcon className="sync-icon" />
+          <span className="tooltiptext">Sync</span>
         </button>
       </div>
     </header>

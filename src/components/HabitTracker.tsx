@@ -184,7 +184,39 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit, onUpda
   };
 
   const dateColumns = createDateColumns();
-  const visibleMonths = dateRange.months.slice(-8);
+  
+  // Calculate month spans
+  const getMonthSpans = () => {
+    const monthSpans: { month: string; columnSpan: number }[] = [];
+    let currentMonth = '';
+    let currentSpan = 0;
+
+    dateColumns.forEach((column) => {
+      const columnMonth = column[0].date.toLocaleDateString('en-US', { 
+        month: 'short',
+        year: 'numeric'
+      });
+
+      if (columnMonth === currentMonth) {
+        currentSpan++;
+      } else {
+        if (currentMonth) {
+          monthSpans.push({ month: currentMonth, columnSpan: currentSpan });
+        }
+        currentMonth = columnMonth;
+        currentSpan = 1;
+      }
+    });
+
+    // Add the last month span
+    if (currentMonth) {
+      monthSpans.push({ month: currentMonth, columnSpan: currentSpan });
+    }
+
+    return monthSpans;
+  };
+
+  const monthSpans = getMonthSpans();
 
   // Position tooltip based on column position
   const getTooltipPosition = (columnIndex: number, totalColumns: number): string => {
@@ -204,7 +236,7 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit, onUpda
   };
 
   return (
-    <div className="habit-tracker" style={{ fontFamily: "'Rubik', sans-serif" }}>
+    <div className="habit-tracker" style={{ fontFamily: "'Fira Sans', sans-serif !important" }}>
       <div className="habit-header">
         <div className="habit-subheader">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -264,12 +296,23 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit, onUpda
           </button>
       </div>
       <div className="calendar">
-        <div className="months">
-          {visibleMonths.map(month => (
-            <span key={month} className="month">{month}</span>
-          ))}
-        </div>
         <div className="days-scroll" ref={scrollRef}>
+          <div className="days" style={{ display: 'flex', justifyContent: 'space-around' }}>
+            {monthSpans.map(({ month }, index) => (
+              <div 
+                key={`${month}-${index}`} 
+                style={{ 
+                  minWidth: `${88}px`,
+                  alignItems: 'center',
+                  textAlign: 'center',
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}
+              >
+                {month}
+              </div>
+            ))}
+          </div>
           <div className="days">
             {dateColumns.map((column, columnIndex) => (
               <div key={columnIndex} className="day-column">
