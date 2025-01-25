@@ -244,20 +244,6 @@ h1 {
   border-color: transparent;
 }
 
-@media (max-width: 768px) {
-  .day {
-    width: 16px;
-    height: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .day {
-    width: 14px;
-    height: 14px;
-  }
-}
-
 /* Streak Display */
 .streak-info {
   display: flex;

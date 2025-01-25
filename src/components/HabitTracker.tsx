@@ -297,7 +297,7 @@ const HabitTracker: React.FC<HabitTrackerProps> = ({ habit: initialHabit, onUpda
       </div>
       <div className="calendar">
         <div className="days-scroll" ref={scrollRef}>
-          <div className="days" style={{ display: 'flex', justifyContent: 'space-around' }}>
+          <div className="days" style={{ display: 'flex', marginBottom: '10px'}}>
             {monthSpans.map(({ month }, index) => (
               <div 
                 key={`${month}-${index}`} 
